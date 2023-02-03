@@ -8,7 +8,6 @@ app = Flask(__name__)
 cluster = MongoClient("mongodb+srv://pythoneverywhere:pythoneverywherepwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 db = cluster['Lasdoutbc_dataHouse']
 collection = db['bookedDetails']
-collection.insert_one({'_id': 55, 'name': 'mark', 'age': 39})
 CORS(app)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -95,6 +94,7 @@ def insertData(id_, status, user_details, booking_details, appointment_date):
         'appointmentDate': appointment_date
     }
     print(data)
+    collection.insert_one(data)
     # booked_details_collection.insert_one(data)
 
 def update(id, status):
@@ -140,13 +140,13 @@ def Index():
     booking_details = data.get('bookingDetails')
     appointment_date = data.get('appointmentDate')
     print(data, id_, status,  user_details, booking_details, appointment_date)
-    # res = htmlMail(id_, status, user_details, booking_details, appointment_date)
+    res = htmlMail(id_, status, user_details, booking_details, appointment_date)
 
-    # try:
-    #     insertData(id_, status, user_details, booking_details, appointment_date)
-    #     return "success"
-    # except:
-    #     return "Problem inserting to database", 400
+    try:
+        insertData(id_, status, user_details, booking_details, appointment_date)
+        return "success"
+    except:
+        return "Problem inserting to database", 400
     return "success"
 
 if __name__ == "__main__":
