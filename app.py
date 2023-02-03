@@ -141,7 +141,7 @@ def Home():
 def Send():
     data = request.json
     print(data)
-    collection.insert_one(json.dumps(data))
+    collection.insert_one({'id': 20, 'name': 'Micheal', 'score': 97})
 
 @app.route("/send", methods=['POST'])
 def Index():
