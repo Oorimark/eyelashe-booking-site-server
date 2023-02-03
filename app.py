@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_mail import Mail, Message
 from pymongo import MongoClient
+from waitress import serve
 
 app = Flask(__name__)
 # cluster = MongoClient("mongodb+srv://lashdout:lashdoutpwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
@@ -150,4 +151,4 @@ def Index():
     return "success"
 
 if __name__ == "__main__":
-    app.run(debug=True,port=8000)
+    serve(app, host='0.0.0.0', port=50100, threads=2)
