@@ -26,8 +26,10 @@ mail = Mail(app)
 
 # html formatted mail
 def htmlMail(id_, status, userDetails, bookingDetails, appointmentDate):
+    firstName = userDetails['firstName']
+    lastName = userDetails['lastName']
     with app.app_context():
-        message = Message("Hello, A Booking has been made",recipients=['oorimark@gmail.com'])
+        message = Message(f"Hello, A Booking has been made by {firstName} {lastName}",recipients=['oorimark@gmail.com'])
         message.html = f"""
             <div>
                 <h2>Booking information</h2>
@@ -50,17 +52,19 @@ def htmlMail(id_, status, userDetails, bookingDetails, appointmentDate):
                     align-items: center;
                     column-gap: 4rem;
                     ">
-                  <div
-                    id="accept"
-                    style="
-                           background-color: #B0223B;
-                           padding: .7rem 2.7rem;
-                           color: white;
-                           border-radius: 3rem;
-                           cursor: pointer;
-                           ">
-                    Accept
-                  </div>
+                <a href="https://lashedoutbc.onrender.com/update/{id_}/approved" >
+                    <div
+                        id="accept"
+                        style="
+                            background-color: #B0223B;
+                            padding: .7rem 2.7rem;
+                            color: white;
+                            border-radius: 3rem;
+                            cursor: pointer;
+                            ">
+                        Accept
+                    </div>
+                </a>
                   <div
                     id="reject"
                     style="
@@ -142,6 +146,7 @@ def Send():
     data = request.json
     print(data)
     collection.insert_one({'id': 20, 'name': 'Micheal', 'score': 97})
+    return "success"
 
 @app.route("/send", methods=['POST'])
 def Index():
@@ -161,5 +166,9 @@ def Index():
         return "Problem inserting to database", 400
     return "success"
 
+mode = 'dev'
 if __name__ == "__main__":
-    serve(app, host='0.0.0.0', port=50100, threads=2)
+    if mode == 'dev':
+        app.run(debug=True, port=8000)
+    else:
+        serve(app, host='0.0.0.0', port=50100, threads=2)
