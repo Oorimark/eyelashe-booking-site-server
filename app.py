@@ -132,6 +132,10 @@ def UpdateBookedService(id, status):
     res = ("Something went wrong. call the developers attention")
     return res
 
+@app.route("/")
+def Home():
+    return "Welcome to Lashdout"
+
 @app.route("/send", methods=['POST'])
 def Index():
     data = request.json
