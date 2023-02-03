@@ -8,7 +8,7 @@ app = Flask(__name__)
 cluster = MongoClient("mongodb+srv://pythoneverywhere:pythoneverywherepwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 db = cluster['Lasdoutbc_dataHouse']
 collection = db['bookedDetails']
-collection.insert_one({'_id': 25, 'name': 'mark'})
+collection.insert_one({'_id': 55, 'name': 'mark', 'age': 39})
 CORS(app)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
