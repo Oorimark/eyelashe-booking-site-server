@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_mail import Mail, Message
 from pymongo import MongoClient
 from waitress import serve
+import json
 
 app = Flask(__name__)
 # cluster = MongoClient("mongodb+srv://lashdout:lashdoutpwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
@@ -135,6 +136,11 @@ def UpdateBookedService(id, status):
 @app.route("/")
 def Home():
     return "Welcome to Lashdout"
+
+@app.route("/sendDb")
+def Send():
+    data = request.json
+    collection.insert_one(json.dumps(data))
 
 @app.route("/send", methods=['POST'])
 def Index():
