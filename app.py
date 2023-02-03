@@ -137,9 +137,10 @@ def UpdateBookedService(id, status):
 def Home():
     return "Welcome to Lashdout"
 
-@app.route("/sendDb")
+@app.route("/sendDb", methods=['POST'])
 def Send():
     data = request.json
+    print(data)
     collection.insert_one(json.dumps(data))
 
 @app.route("/send", methods=['POST'])
