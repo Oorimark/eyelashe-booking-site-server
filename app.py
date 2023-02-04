@@ -105,7 +105,7 @@ def insertData(id_, status, user_details, booking_details, appointment_date):
 
 def update(id, status):
     try:
-        booked_details_collection.update_one({'_id': id}, {'$set': {'status': status}})
+        collection.update_one({'_id': id}, {'$set': {'status': status}})
         return 1
     except:
         return 0
@@ -166,7 +166,7 @@ def Index():
         return "Problem inserting to database", 400
     return "success"
 
-mode = 'dev'
+mode = 'prod'
 if __name__ == "__main__":
     if mode == 'dev':
         app.run(debug=True, port=8000)
