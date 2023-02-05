@@ -65,17 +65,19 @@ def htmlMail(id_, status, userDetails, bookingDetails, appointmentDate):
                         Accept
                     </div>
                 </a>
-                  <div
-                    id="reject"
-                    style="
-                           border: .2rem solid #B0223B;
-                           padding: .7rem 2.7rem;
-                           border-radius: 3rem;
-                           cursor: pointer;
-                           "
-                     >
-                    Reject
-                  </div>
+                <a href="https://lashedoutbc.onrender.com/update/{id_}/rejected" >
+                    <div
+                        id="reject"
+                        style="
+                            border: .2rem solid #B0223B;
+                            padding: .7rem 2.7rem;
+                            border-radius: 3rem;
+                            cursor: pointer;
+                            "
+                        >
+                        Reject
+                    </div>
+                </a>
                 </div>
             </div>
         """
@@ -99,7 +101,6 @@ def insertData(id_, status, user_details, booking_details, appointment_date):
         'serviceDetailsID': serviceDetailsID,
         'appointmentDate': appointment_date
     }
-    print(data)
     collection.insert_one(data)
     # booked_details_collection.insert_one(data)
 
@@ -112,11 +113,12 @@ def update(id, status):
 
 def fetchData(ids):
     """ Fetch the status for each bookedService """
-    response = dict()
     response_list = list()
     for id in ids:
-        data = booked_details_collection.find_one({'_id': id})
-        response[id] = data['status']
+        response = dict()
+        data = collection.find_one({'_id': id})
+        response['id'] = id
+        response['status'] = data['status']
         response_list.append(response)
     return response_list
 
@@ -133,20 +135,12 @@ def FetchBookedService():
 def UpdateBookedService(id, status):
     response = update(id, status)
     if(response):
-        res = ("The client has been informed")
-    res = ("Something went wrong. call the developers attention")
-    return res
+        return ("The client has been informed")
+    return ("Something went wrong. call the developers attention")
 
 @app.route("/")
 def Home():
     return "Welcome to Lashdout"
-
-@app.route("/sendDb", methods=['POST'])
-def Send():
-    data = request.json
-    print(data)
-    collection.insert_one({'id': 20, 'name': 'Micheal', 'score': 97})
-    return "success"
 
 @app.route("/send", methods=['POST'])
 def Index():
