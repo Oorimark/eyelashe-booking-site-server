@@ -117,9 +117,12 @@ def fetchData(ids):
     for id in ids:
         response = dict()
         data = collection.find_one({'_id': id})
-        response['id'] = id
-        response['status'] = data['status']
-        response_list.append(response)
+        if data:
+            response['id'] = id
+            response['status'] = data['status']
+            response_list.append(response)
+        else:
+            raise Exception
     return response_list
 
 # ===============================================
@@ -127,9 +130,16 @@ def fetchData(ids):
 @app.route("/fetch", methods=['POST'])
 def FetchBookedService():
     data = request.json
-    response = fetchData(data.get('ids'))
-    pack_data = {'data': response}
-    return jsonify(pack_data), 200
+    if data.get('ids'):
+        try:
+            response = fetchData(data.get('ids'))
+        except:
+            return jsonify({'error': 'service cannot be found'}), 400
+        else:
+            pack_data = {'data': response}
+            return jsonify(pack_data), 200
+    else:
+        return "data received is empty", 400
 
 @app.route("/update/<id>/<status>", methods=['GET'])
 def UpdateBookedService(id, status):
