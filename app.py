@@ -35,6 +35,7 @@ def htmlMail(id_, status, userDetails, bookingDetails, appointmentDate):
                 <h2>Booking information</h2>
                 <hr />
                 <h4> User Information </h4>
+                <p> ID: {_id} </p>
                 <p> Status: {status}</p>
                 <p> Full Name: {userDetails['firstName']} {userDetails['lastName']} </p>
                 <p> Email: {userDetails['email']} </p>
