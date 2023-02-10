@@ -8,8 +8,11 @@ import json
 app = Flask(__name__)
 # cluster = MongoClient("mongodb+srv://lashdout:lashdoutpwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 cluster = MongoClient("mongodb+srv://pythoneverywhere:pythoneverywherepwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
+
+ADMIN_EMAIL = 'oorimark@gmai.com'
 db = cluster['Lasdoutbc_dataHouse']
 booked_details_collection = db['bookedDetails']
+contact_message_collection = db['contactMessages']
 CORS(app)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -21,21 +24,44 @@ app.config['MAIL_PASSWORD'] = 'xodvtzyiphvkhrmu'
 app.config['MAIL_DEFAULT_SENDER'] = ('Lashedout_bc','markpublicm@gmail.com')
 app.config['MAIL_ASCII_ATTACHMENTS'] = False
 
-# plain text mails
 mail = Mail(app)
 
 # html formatted mail
-def htmlMail(id_, status, userDetails, bookingDetails, appointmentDate):
+def booked_service_cancellation_mail_template(id_, userDetails, bookingDetails):
+    with app.app_context():
+        message = Message(f"Hi, A Booking Cancellation by {userDetails['firstName'] {userDetails['lastName']}}", recipients=ADMIN_EMAIL)
+        message.html = f""" 
+            <div>
+                <h2> Booking Cancellation Information </h2>
+                <hr />
+                <h4> User Information </h4>
+                <p> Booking Id: {id_} </p>
+                <p> Status: Cancellation </p>
+                <p> Full Name: {userDetails['firstName']} {userDetails['lastName']} </p>
+                <p> Email : {userDetails['email']} </p>
+                <p> Phone Number: {userDetails['phone']} </p>
+            </div>
+        """
+        mail.send(message)
+    return "success"
+
+def contact_mail_template(email, msg):
+    with app.app_context():
+        message = Message(f"A Contact Message from {email}")
+        message.body = msg
+        mail.send(Message)
+        
+def booked_service_mail_template(id_, status, userDetails, bookingDetails, appointmentDate):
     firstName = userDetails['firstName']
     lastName = userDetails['lastName']
     with app.app_context():
-        message = Message(f"Hello, A Booking has been made by {firstName} {lastName}",recipients=['oorimark@gmail.com'])
+        message = Message(f"Hello, A Booking has been made by {firstName} {lastName}",recipients=ADMIN_EMAIL)
         message.html = f"""
             <div>
                 <h2>Booking information</h2>
                 <hr />
                 <h4> User Information </h4>
-                <p> ID: {_id} </p>
+                <p> Booking ID: {id_} </p>
                 <p> Status: {status}</p>
                 <p> Full Name: {userDetails['firstName']} {userDetails['lastName']} </p>
                 <p> Email: {userDetails['email']} </p>
@@ -154,6 +180,15 @@ def DeleteService():
     except:
         return "error", 400
 
+@app.route("/sendContactMessage", methods=['POST'])
+def ContactMessage():
+    data = request.json()
+    email = data.get('email')
+    msg = data.get('msg')
+    
+    contact_mail_template(email, msg) # send email
+    contact_message_collection.insert_one(data) # send to db
+    
 @app.route("/update/<id>/<status>", methods=['GET'])
 def UpdateBookedService(id, status):
     response = update(id, status)
@@ -174,8 +209,7 @@ def Index():
     user_details = data.get('userDetails')
     booking_details = data.get('bookingDetails')
     appointment_date = data.get('appointmentDate')
-    print(data, id_, status,  user_details, booking_details, appointment_date)
-    res = htmlMail(id_, status, user_details, booking_details, appointment_date)
+    res = booked_service_mail_template(id_, status, user_details, booking_details, appointment_date)
 
     try:
         insertData(id_, status, user_details, booking_details, appointment_date)
