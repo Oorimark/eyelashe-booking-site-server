@@ -9,7 +9,7 @@ app = Flask(__name__)
 # cluster = MongoClient("mongodb+srv://lashdout:lashdoutpwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 cluster = MongoClient("mongodb+srv://pythoneverywhere:pythoneverywherepwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 db = cluster['Lasdoutbc_dataHouse']
-collection = db['bookedDetails']
+booked_details_collection = db['bookedDetails']
 CORS(app)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -92,7 +92,6 @@ def htmlMail(id_, status, userDetails, bookingDetails, appointmentDate):
 """ Operations (Logic) """
 
 def insertData(id_, status, user_details, booking_details, appointment_date):
-
     userDetailsID = user_details['id']
     serviceDetailsID = booking_details['id']
     data = {
@@ -102,12 +101,12 @@ def insertData(id_, status, user_details, booking_details, appointment_date):
         'serviceDetailsID': serviceDetailsID,
         'appointmentDate': appointment_date
     }
-    collection.insert_one(data)
-    # booked_details_collection.insert_one(data)
+    booked_details_collection.insert_one(data)
+    # booked_details_booked_details_collection.insert_one(data)
 
 def update(id, status):
     try:
-        collection.update_one({'_id': id}, {'$set': {'status': status}})
+        booked_details_collection.update_one({'_id': id}, {'$set': {'status': status}})
         return 1
     except:
         return 0
@@ -115,9 +114,10 @@ def update(id, status):
 def fetchData(ids):
     """ Fetch the status for each bookedService """
     response_list = list()
+    
     for id in ids:
         response = dict()
-        data = collection.find_one({'_id': id})
+        data = booked_details_collection.find_one({'_id': id})
         if data:
             response['id'] = id
             response['status'] = data['status']
@@ -131,6 +131,7 @@ def fetchData(ids):
 @app.route("/fetch", methods=['POST'])
 def FetchBookedService():
     data = request.json
+    
     if data.get('ids'):
         try:
             response = fetchData(data.get('ids'))
@@ -141,10 +142,22 @@ def FetchBookedService():
             return jsonify(pack_data), 200
     else:
         return "data received is empty", 400
+    
+@app.route("/deleteService", methods=['POST'])
+def DeleteService():
+    data = request.json
+    id = data.get('id')
+
+    try:
+        booked_details_collection.delete_one({'id': id})
+        return "success", 200
+    except:
+        return "error", 400
 
 @app.route("/update/<id>/<status>", methods=['GET'])
 def UpdateBookedService(id, status):
     response = update(id, status)
+    
     if(response):
         return ("The client has been informed")
     return ("Something went wrong. call the developers attention")
