@@ -229,7 +229,7 @@ def Index():
         return "Problem inserting to database", 400
     return "success"
 
-mode = 'dev'
+mode = 'prod'
 if __name__ == "__main__":
     if mode == 'dev':
         app.run(debug=True, port=8000)
