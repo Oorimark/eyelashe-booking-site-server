@@ -29,17 +29,15 @@ mail = Mail(app)
 # html formatted mail
 def booked_service_cancellation_mail_template(id_, userDetails, bookingDetails):
     with app.app_context():
-        message = Message(f"Hi, A Booking Cancellation by {userDetails['firstName'] {userDetails['lastName']}}", recipients=ADMIN_EMAIL)
+        message = Message(f"Hi, A Booking Cancellation by {userDetails}", recipients=[ADMIN_EMAIL])
         message.html = f""" 
             <div>
                 <h2> Booking Cancellation Information </h2>
                 <hr />
                 <h4> User Information </h4>
                 <p> Booking Id: {id_} </p>
-                <p> Status: Cancellation </p>
-                <p> Full Name: {userDetails['firstName']} {userDetails['lastName']} </p>
-                <p> Email : {userDetails['email']} </p>
-                <p> Phone Number: {userDetails['phone']} </p>
+                <p> User Id: {userDetails} </p>
+                <p> Service Id: {bookingDetails} </p>
             </div>
         """
         mail.send(message)
@@ -47,15 +45,15 @@ def booked_service_cancellation_mail_template(id_, userDetails, bookingDetails):
 
 def contact_mail_template(email, msg):
     with app.app_context():
-        message = Message(f"A Contact Message from {email}")
+        message = Message(f"A Contact Message from {email}", recipients=[ADMIN_EMAIL])
         message.body = msg
-        mail.send(Message)
+        mail.send(message)
         
 def booked_service_mail_template(id_, status, userDetails, bookingDetails, appointmentDate):
     firstName = userDetails['firstName']
     lastName = userDetails['lastName']
     with app.app_context():
-        message = Message(f"Hello, A Booking has been made by {firstName} {lastName}",recipients=ADMIN_EMAIL)
+        message = Message(f"Hello, A Booking has been made by {firstName} {lastName}",recipients=[ADMIN_EMAIL])
         message.html = f"""
             <div>
                 <h2>Booking information</h2>
@@ -137,7 +135,7 @@ def update(id, status):
     except:
         return 0
 
-def fetchData(ids):
+def fetchDataStatus(ids):
     """ Fetch the status for each bookedService """
     response_list = list()
     
@@ -152,6 +150,10 @@ def fetchData(ids):
             raise Exception
     return response_list
 
+def fetchData(id):
+    data = booked_details_collection.find_one({'_id': id})
+    return data
+
 # ===============================================
 
 @app.route("/fetch", methods=['POST'])
@@ -160,7 +162,7 @@ def FetchBookedService():
     
     if data.get('ids'):
         try:
-            response = fetchData(data.get('ids'))
+            response = fetchDataStatus(data.get('ids'))
         except:
             return jsonify({'error': 'service cannot be found'}), 400
         else:
@@ -175,19 +177,28 @@ def DeleteService():
     id = data.get('id')
 
     try:
-        booked_details_collection.delete_one({'id': id})
+        # before deleting send an email to admin
+        queried_data = fetchData(id)
+        print(queried_data)
+        _id , _, user_details, service_details, _ = queried_data.values()
+        print(_id, user_details, service_details)
+        booked_service_cancellation_mail_template(
+            _id, user_details, service_details
+        )
+        booked_details_collection.delete_one({'_id': id})
         return "success", 200
     except:
         return "error", 400
 
 @app.route("/sendContactMessage", methods=['POST'])
 def ContactMessage():
-    data = request.json()
+    data = request.json
     email = data.get('email')
     msg = data.get('msg')
     
     contact_mail_template(email, msg) # send email
     contact_message_collection.insert_one(data) # send to db
+    return "success", 200
     
 @app.route("/update/<id>/<status>", methods=['GET'])
 def UpdateBookedService(id, status):
@@ -218,7 +229,7 @@ def Index():
         return "Problem inserting to database", 400
     return "success"
 
-mode = 'prod'
+mode = 'dev'
 if __name__ == "__main__":
     if mode == 'dev':
         app.run(debug=True, port=8000)
