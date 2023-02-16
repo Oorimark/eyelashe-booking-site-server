@@ -9,7 +9,7 @@ app = Flask(__name__)
 # cluster = MongoClient("mongodb+srv://lashdout:lashdoutpwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 cluster = MongoClient("mongodb+srv://pythoneverywhere:pythoneverywherepwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 
-ADMIN_EMAIL = 'oorimark@gmai.com'
+ADMIN_EMAIL = 'oorimark@gmail.com'
 db = cluster['Lasdoutbc_dataHouse']
 booked_details_collection = db['bookedDetails']
 contact_message_collection = db['contactMessages']
@@ -27,6 +27,12 @@ app.config['MAIL_ASCII_ATTACHMENTS'] = False
 mail = Mail(app)
 
 # html formatted mail
+def test_mailing_service():
+    with app.app_context():
+        message = Message("Hello, how are you", recipients=['oorimark@gmail.com'])
+        message.body = "How are you doing today?"
+        mail.send(message)
+        
 def booked_service_cancellation_mail_template(id_, userDetails, bookingDetails):
     with app.app_context():
         message = Message(f"Hi, A Booking Cancellation by {userDetails}", recipients=[ADMIN_EMAIL])
@@ -207,6 +213,11 @@ def UpdateBookedService(id, status):
     if(response):
         return ("The client has been informed")
     return ("Something went wrong. call the developers attention")
+
+@app.route("/testing")
+def Testing():
+    test_mailing_service()
+    return "success"
 
 @app.route("/")
 def Home():
