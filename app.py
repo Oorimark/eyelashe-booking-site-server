@@ -5,14 +5,22 @@ from pymongo import MongoClient
 from waitress import serve
 import json
 
+from flask import Blueprint, request
+
+admin_blueprint = Blueprint('admin_blueprints', __name__, url_prefix="/setAdmin")
+ADMIN_SETTINGS_DB_ID = "63f35d6f9fd0ec07e73aa55b"
+
 app = Flask(__name__)
-# cluster = MongoClient("mongodb+srv://lashdout:lashdoutpwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
+app.register_blueprint(admin_blueprint)
 cluster = MongoClient("mongodb+srv://pythoneverywhere:pythoneverywherepwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 
 ADMIN_EMAIL = 'oorimark@gmail.com'
 db = cluster['Lasdoutbc_dataHouse']
 booked_details_collection = db['bookedDetails']
 contact_message_collection = db['contactMessages']
+admin_settings = db['adminSettings']
+users_collection = db['users']
+
 CORS(app)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -33,17 +41,17 @@ def test_mailing_service():
         message.body = "How are you doing today?"
         mail.send(message)
         
-def booked_service_cancellation_mail_template(id_, userDetails, bookingDetails):
+def booked_service_cancellation_mail_template(id_, userDetailsID, bookingDetailsID):
     with app.app_context():
-        message = Message(f"Hi, A Booking Cancellation by {userDetails}", recipients=[ADMIN_EMAIL])
+        message = Message(f"Hi, A Booking Cancellation by {userDetailsID}", recipients=[ADMIN_EMAIL])
         message.html = f""" 
             <div>
                 <h2> Booking Cancellation Information </h2>
                 <hr />
                 <h4> User Information </h4>
                 <p> Booking Id: {id_} </p>
-                <p> User Id: {userDetails} </p>
-                <p> Service Id: {bookingDetails} </p>
+                <p> User Id: {userDetailsID} </p>
+                <p> Service Id: {bookingDetailsID} </p>
             </div>
         """
         mail.send(message)
@@ -209,10 +217,18 @@ def ContactMessage():
 @app.route("/update/<id>/<status>", methods=['GET'])
 def UpdateBookedService(id, status):
     response = update(id, status)
-    
     if(response):
         return ("The client has been informed")
     return ("Something went wrong. call the developers attention")
+
+@app.route("/addUser", methods={'POST'})
+def AddUsers():
+    data = request.json
+    try:
+        users_collection.insert_one(data)
+        return jsonify({"data": "success"}), 200
+    except Exception as e:
+        return jsonify({"data": "error", "err_details": e}), 400
 
 @app.route("/testing")
 def Testing():
@@ -239,6 +255,30 @@ def Index():
     except:
         return "Problem inserting to database", 400
     return "success"
+
+@app.route("/changeAdminSettings", methods=['POST'])
+def change_settings():
+    changes = request.json
+    print(changes)
+    admin_settings.update_one({'_id': ADMIN_SETTINGS_DB_ID}, {'$set': changes})
+    return "success"
+
+@app.route("/fetchAdminSettings")
+def fetch_admin_settings():
+    settings = admin_settings.find()
+    for setting in settings:
+        admin_setting = setting
+    return jsonify(admin_setting), 200
+
+# """ BLUEPRINT 
+#     NB: Move a folder ASAP
+# """
+# @admin_blueprint.route('/changeAdminSettings', methods=['POST'])
+# def change_settings():
+#     changes = request.json
+#     print(changes)
+#     admin_settings.update_one({'_id': ADMIN_SETTINGS_DB_ID}, {'$set': changes})
+#     return "success"
 
 mode = 'prod'
 if __name__ == "__main__":
