@@ -5,13 +5,11 @@ from pymongo import MongoClient
 from waitress import serve
 import json
 
-from flask import Blueprint, request
-
-admin_blueprint = Blueprint('admin_blueprints', __name__, url_prefix="/setAdmin")
+# admin_blueprint = Blueprint('admin_blueprints', __name__, url_prefix="/setAdmin")
 ADMIN_SETTINGS_DB_ID = "63f35d6f9fd0ec07e73aa55b"
 
 app = Flask(__name__)
-app.register_blueprint(admin_blueprint)
+# app.register_blueprint(admin_blueprint)
 cluster = MongoClient("mongodb+srv://pythoneverywhere:pythoneverywherepwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 
 ADMIN_EMAIL = 'oorimark@gmail.com'
@@ -22,7 +20,6 @@ admin_settings = db['adminSettings']
 users_collection = db['users']
 
 CORS(app)
-
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = False
