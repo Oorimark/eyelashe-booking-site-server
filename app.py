@@ -16,8 +16,9 @@ ADMIN_EMAIL = 'oorimark@gmail.com'
 db = cluster['Lasdoutbc_dataHouse']
 booked_details_collection = db['bookedDetails']
 contact_message_collection = db['contactMessages']
-admin_settings = db['adminSettings']
+admin_settings_collection = db['adminSettings']
 users_collection = db['users']
+data_available_collection = db['dateAvailable']
 
 CORS(app)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -37,6 +38,10 @@ def test_mailing_service():
         message = Message("Hello, how are you", recipients=['oorimark@gmail.com'])
         message.body = "How are you doing today?"
         mail.send(message)
+        
+def availability_notification_mail_template(availability, recipient):
+    with app.app_context():
+        message = Message()
         
 def booked_service_cancellation_mail_template(id_, userDetailsID, bookingDetailsID):
     with app.app_context():
@@ -139,7 +144,7 @@ def insertData(id_, status, user_details, booking_details, appointment_date):
     booked_details_collection.insert_one(data)
     # booked_details_booked_details_collection.insert_one(data)
 
-def update(id, status):
+def update_booked_service(id, status):
     try:
         booked_details_collection.update_one({'_id': id}, {'$set': {'status': status}})
         return 1
@@ -190,9 +195,7 @@ def DeleteService():
     try:
         # before deleting send an email to admin
         queried_data = fetchData(id)
-        print(queried_data)
         _id , _, user_details, service_details, _ = queried_data.values()
-        print(_id, user_details, service_details)
         booked_service_cancellation_mail_template(
             _id, user_details, service_details
         )
@@ -213,7 +216,7 @@ def ContactMessage():
     
 @app.route("/update/<id>/<status>", methods=['GET'])
 def UpdateBookedService(id, status):
-    response = update(id, status)
+    response = update_booked_service(id, status)
     if(response):
         return ("The client has been informed")
     return ("Something went wrong. call the developers attention")
@@ -256,18 +259,73 @@ def Index():
 @app.route("/changeAdminSettings", methods=['POST'])
 def change_settings():
     changes = request.json
-    print(changes)
-    admin_settings.update_one({'_id': ADMIN_SETTINGS_DB_ID}, {'$set': changes})
+    admin_settings_collection.update_one({'_id': ADMIN_SETTINGS_DB_ID}, {'$set': changes})
     return "success"
 
 @app.route("/fetchAdminSettings")
 def fetch_admin_settings():
-    settings = admin_settings.find()
+    settings = admin_settings_collection.find()
     for setting in settings:
         admin_setting = setting
     return jsonify(admin_setting), 200
 
-# """ BLUEPRINT 
+@app.route("/fetchAppointmentDates")
+def fetch_appointment_dates():
+    data = data_available_collection.find_one({"_id": "2023"})
+    return jsonify(data), 200
+    
+@app.route("/setAppointmentDate", methods=['POST'])
+def check_appointment_date():
+    data = request.json
+    _id, selected_appointment_month, selected_appointment_day, selected_appointment_time = data.values()
+    data_available = data_available_collection.find_one({'_id': _id})
+    if data_available:
+        try:
+            """ try's if the month has been previous selected by a user """
+            data_available[selected_appointment_month]
+        except (AttributeError, KeyError):
+            # if month is not in db
+            data_available[selected_appointment_month] = {
+                selected_appointment_day: [selected_appointment_time]
+            }
+            data_available_collection.delete_one({"_id": _id})
+            data_available_collection.insert_one(data_available)
+        else:
+            try:
+                """ try's if the day has been previous selected by a user """
+                selected_appointment_day_date = selected_appointment_day
+                hours_picked = data_available[selected_appointment_month][selected_appointment_day_date]
+            except (AttributeError, KeyError):
+                data_available[selected_appointment_month][selected_appointment_day] = [selected_appointment_time]
+                data_available_collection.update_one({"_id": _id}, {
+                    "$set": {
+                        selected_appointment_month: data_available[selected_appointment_month]
+                    }
+                })
+            else:
+                selected_appointment_hour = selected_appointment_time
+                # check if the time as been picked
+                if not selected_appointment_hour in hours_picked:
+                    hours_picked.append(selected_appointment_hour)
+                    data_available[selected_appointment_month][selected_appointment_day_date] = hours_picked
+                
+                data_available_collection.update_one({"_id": _id}, {
+                    '$set': {
+                    selected_appointment_month: data_available[selected_appointment_month]
+                }})
+                
+        return jsonify({"data": "updated"}), 200
+    else:
+        data_available = {
+            "_id": _id,
+            selected_appointment_month: {
+                selected_appointment_day: [selected_appointment_time]
+            }
+        }
+        data_available_collection.insert_one(data_available)
+        return jsonify({"data": "success"}), 200
+
+# """ BLUEPRINT
 #     NB: Move a folder ASAP
 # """
 # @admin_blueprint.route('/changeAdminSettings', methods=['POST'])
