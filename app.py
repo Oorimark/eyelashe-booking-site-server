@@ -308,10 +308,10 @@ def Index():
     user_details = data.get('userDetails')
     booking_details = data.get('bookingDetails')
     appointment_date = data.get('appointmentDate')
-    res = booked_service_mail_template(id_, status, user_details,booking_details, appointment_date)
 
     try:
         insertData(id_, status, user_details, booking_details, appointment_date)
+        booked_service_mail_template(id_, status, user_details,booking_details, appointment_date)
         return "success"
     except:
         return "Problem inserting to database", 400
