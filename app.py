@@ -338,6 +338,7 @@ def fetch_appointment_dates():
 @app.route("/setAppointmentDate", methods=['POST'])
 def check_appointment_date():
     data = request.json
+    print(data)
     id, data = data.values()
     packet = {'id': id, 'data': data}
     store_pending = StorePendingId()
