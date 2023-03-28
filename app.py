@@ -293,7 +293,9 @@ def AddUsers():
 
 @app.route("/testing")
 def Testing():
-    test_mailing_service()
+    # test_mailing_service()
+    data = {'email': 'oorimark@gmail.com', 'msg': 'hope you would work well'}
+    contact_message_collection.insert_one(data)
     return "success"
 
 @app.route("/")
