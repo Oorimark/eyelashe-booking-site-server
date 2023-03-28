@@ -33,6 +33,11 @@ app.config['MAIL_ASCII_ATTACHMENTS'] = False
 
 mail = Mail(app)
 
+# error handling
+class DataBaseError(Exception):
+    ...
+class MailServiceError(Exception):
+    ...
 # html formatted mail
 def test_mailing_service():
     with app.app_context():
@@ -57,7 +62,10 @@ def booked_service_cancellation_mail_template(id_, userDetailsID, bookingDetails
                 <p> Service Id: {bookingDetailsID} </p>
             </div>
         """
-        mail.send(message)
+        try:
+            mail.send(message)
+        except:
+            raise MailServiceError
     return "success"
 
 def contact_mail_template(email, msg):
@@ -123,7 +131,10 @@ def booked_service_mail_template(id_, status, userDetails, bookingDetails, appoi
                 </div>
             </div>
         """
-        mail.send(message)
+        try:
+            mail.send(message)
+        except:
+            raise MailServiceError
     return "success"
 
 def setAppointmentDate(date):
@@ -200,7 +211,10 @@ def insertData(id_, status, user_details, booking_details, appointment_date):
         'serviceDetailsID': serviceDetailsID,
         'appointmentDate': appointment_date
     }
-    booked_details_collection.insert_one(data)
+    try:
+        booked_details_collection.insert_one(data)
+    except:
+        raise DataBaseError
 
 def update_booked_service(id, status):
     try:
@@ -315,8 +329,10 @@ def Index():
         insertData(id_, status, user_details, booking_details, appointment_date)
         booked_service_mail_template(id_, status, user_details,booking_details, appointment_date)
         return "success"
-    except:
+    except DataBaseError:
         return "Problem inserting to database", 400
+    except MailServiceError:
+        return "Mail Service is not available", 400
     return "success"
 
 @app.route("/changeAdminSettings", methods=['POST'])
