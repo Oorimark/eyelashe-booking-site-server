@@ -11,7 +11,7 @@ ADMIN_SETTINGS_DB_ID = "63f35d6f9fd0ec07e73aa55b"
 
 app = Flask(__name__)
 # app.register_blueprint(admin_blueprint)
-cluster = MongoClient("mongodb+srv://pythoneverywhere:pythoneverywherepwd@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
+cluster = MongoClient("mongodb+srv://lashdoutbcuser:lMHuGnQ3vOKonC3s@cluster0.xcz3g.mongodb.net/?retryWrites=true&w=majority")
 
 ADMIN_EMAIL = 'oorimark@gmail.com'
 db = cluster['Lasdoutbc_dataHouse']
