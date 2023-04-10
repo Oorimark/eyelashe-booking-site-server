@@ -137,7 +137,7 @@ def booked_service_mail_template(id_, status, userDetails, bookingDetails, appoi
             raise MailServiceError
     return "success"
 
-def setAppointmentDate(date):
+def setAppointmentDate(data):
     _id, selected_appointment_month, selected_appointment_day, selected_appointment_time = data.values()
     data_available = data_available_collection.find_one({'_id': _id})
     if data_available:
